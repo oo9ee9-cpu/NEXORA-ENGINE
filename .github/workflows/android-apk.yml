@@ -14,20 +14,36 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up JDK
+
+      - name: Prepare source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/nexora-source
+          unzip -q source/NEXORA_ENGINE_PHASE1.zip -d /tmp/nexora-source
+          cp -a /tmp/nexora-source/NexoraEngine_Phase1/. .
+
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-      - name: Install Android build tools
+
+      - name: Install Android SDK components
         run: |
           sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.0.12077973" "cmake;3.22.1"
-      - name: Make Gradle wrapper executable
-        run: chmod +x ./gradlew
+
       - name: Build debug APK
-        run: ./gradlew --no-daemon :app:assembleDebug
+        run: gradle --no-daemon :app:assembleDebug
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
